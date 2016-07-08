@@ -25,6 +25,19 @@ angular.module('myApp.container', ['ngRoute'])
                 },
             }
         })
+        .when('/container-copy', {
+            title: 'Containers',
+            templateUrl: 'modules/container/container-copy.html',
+            controller: 'containerCopyCtrl',
+            resolve: {
+                images: function (ImageServices, $route) {
+                    return ImageServices.getAll();
+                },
+                profiles: function(ProfileServices) {
+                    return ProfileServices.getAll();
+                },
+            }
+        })
         .when('/container-view/:containerName', {
             title: 'Container',
             templateUrl: 'modules/container/container-view.html',
@@ -230,6 +243,43 @@ angular.module('myApp.container', ['ngRoute'])
         }
     })
 
+    .controller('containerCopyCtrl', function ($scope, $routeParams, $filter, $location,
+                                                 ContainerServices, ImageServices, profiles ) {
+        $scope.containerName = "";
+
+        $scope.selectedImage = null;
+        $scope.images = images;
+
+        $scope.profiles = profiles;
+        $scope.selected = {
+          profile: _.findWhere(profiles, { name: "default"} ),
+          ephemeral: false,
+        }
+
+
+        $scope.setImage = function (image) {
+            $scope.selectedImage = image;
+        }
+
+        $scope.copyContainer = function (isValid) {
+          $scope.isSubmitted = true;
+
+          if (isValid) {
+            ContainerServices.copy(
+                $scope.containerName,
+                $scope.selected.image.fingerprint,
+                $scope.selected.profile.name,
+                $scope.selected.ephemeral)
+                .then(function(data) {
+                  window.location = "#/containers";
+                }, function(error) {
+                  var errorMsg = error.error;
+                  console.log("Error: " + errorMsg);
+                });
+          }
+
+        }
+    })
 
 
     .controller('containerSnapshotCtrl', function ($scope, $routeParams, $filter, $location, $uibModal,
